@@ -7,8 +7,10 @@ BOARD_HEIGHT = 600
 LINE_WIDTH = 15
 SQUARE_SIZE = 200
 
-COLOR_2 = (175, 234, 220)
-COLOR_1 = (4, 30, 66)
+COLOR_4 = (236,224,209)
+COLOR_2 = (219,193,172)
+COLOR_1 = (150,114,89)
+COLOR_3 = (99,72,50)
 
 class ScoreBoard:
     def __init__(self):
@@ -18,18 +20,18 @@ class ScoreBoard:
 
     def draw_score(self, screen, player_list):
         pygame.draw.rect(screen, COLOR_2, self.score_board)
-        player_score = [self.small_font.render(f'{player.score}', True, COLOR_1, COLOR_2) for player in player_list]
+        player_score = [self.small_font.render(f'{player.score}', True, COLOR_3, COLOR_2) for player in player_list]
         player_score_rect = [player_score[i].get_rect(midtop=(SQUARE_SIZE*(0.5 + 2*i), SQUARE_SIZE*3.1)) for i in range(2)]
         for i in range(2):
             screen.blit(player_score[i], player_score_rect[i])
 
     def draw_winner(self, screen, winner):
         if winner:
-            message = self.small_font.render(f'{winner.tag.upper()} wins', False, COLOR_1, COLOR_2)
+            message = self.small_font.render(f'{winner.tag.upper()} wins', False, COLOR_3, COLOR_2)
         else:
-            message = self.small_font.render(f'DRAW', True, COLOR_1, COLOR_2)
+            message = self.small_font.render(f'DRAW', True, COLOR_3, COLOR_2)
         message_rect = message.get_rect(midtop=(WIDTH / 2, SQUARE_SIZE * 3.1))
-        replay = self.smaller_font.render('Press any key to restart', False, COLOR_1, COLOR_2)
+        replay = self.smaller_font.render('Press any key to restart', False, COLOR_3, COLOR_2)
         replay_rect = replay.get_rect(midtop=(WIDTH / 2, SQUARE_SIZE * 3.36))
         screen.blit(message, message_rect)
         screen.blit(replay, replay_rect)
@@ -38,8 +40,8 @@ class Board:
     def __init__(self):
         self.board = np.zeros((3, 3))
         self.font = pygame.font.Font('consola.ttf', 150)
-        self.x = self.font.render('\u00D7', False, COLOR_2, COLOR_1)
-        self.o = self.font.render('\u25CB', False, COLOR_2, COLOR_1)
+        self.x = self.font.render('\u00D7', False, COLOR_3, COLOR_1)
+        self.o = self.font.render('\u25CB', False, COLOR_4, COLOR_1)
 
     def empty_square(self, row, col):
         return self.board[row, col] == 0
