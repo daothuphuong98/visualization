@@ -1,8 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations
-from scipy.spatial import ConvexHull
+from shapely.geometry import LineString, Polygon, Point
+from shapely.ops import split
 np.random.seed(11)
+
+LEFT_TOP = (-3, 12)
+RIGHT_TOP = (12, 12)
+LEFT_BOTTOM = (-3, -3)
+RIGHT_BOTTOM = (12, -3)
+
+BOTTOM_LINE = LineString((LEFT_BOTTOM, RIGHT_BOTTOM))
+TOP_LINE = LineString((LEFT_TOP, RIGHT_TOP))
+LEFT_LINE = LineString((LEFT_TOP, LEFT_BOTTOM))
+RIGHT_LINE = LineString((RIGHT_TOP, RIGHT_BOTTOM))
+
+PLANE = Polygon((LEFT_TOP, RIGHT_TOP, RIGHT_BOTTOM, LEFT_BOTTOM))
 
 def random_data():
     means = [[2, 2], [8, 3], [3, 6]]
@@ -36,39 +49,53 @@ def kmeans(X, k):
         centroid = new_centroid
     return label, centroid
 
-def kmeans_display(X, label, centroid):
+def kmeans_display(X, k, label, centroid):
 
     color = ['b','g','r','c','m', 'y', 'k','w']
     unique_label = np.unique(label)
-    for i in range(len(unique_label)):
+    for i in range(k):
         cluster = X[label == unique_label[i]]
         plt.plot(cluster[:, 0], cluster[:, 1], color[i] + 'o', markersize=4, alpha=.8)
 
-        hull = ConvexHull(cluster)
-        x_hull = np.append(cluster[hull.vertices, 0],
-                           cluster[hull.vertices, 0][0])
-        y_hull = np.append(cluster[hull.vertices, 1],
-                           cluster[hull.vertices, 1][0])
-        plt.fill(x_hull, y_hull, alpha=0.3, c=color[i])
-
     plt.plot(centroid[:, 0], centroid[:, 1], 'y^', markersize=7, alpha=1)
 
-    x = np.arange(-3, 10, 1)
-    for c in combinations(centroid, 2):
-        u = c[0] - c[1]
-        m = (c[0] + c[1])/2
+    x = np.arange(-3, 15, 1)
+    polygons = {x:[] for x in range(k)}
+    for c1, c2 in combinations(range(k), 2):
+        u = centroid[c1] - centroid[c2]
+        m = (centroid[c1]+ centroid[c2])/2
         y = m[1] + u[0]/u[1]*(m[0]-x)
-        plt.plot(x,y, 'k:')
+        p1, p2 = make_polygon(Point(centroid[c1]), Point(centroid[c2]),
+                  LineString(((x[0], y[0]), (x[-1], y[-1]))))
+        polygons[c1].append(p1)
+        polygons[c2].append(p2)
+    for centroid, polygon_list in polygons.items():
+        pol = get_intersect_polygon(polygon_list)
+        x, y = pol.exterior.xy
+        plt.fill(x, y, c=color[centroid], alpha = 0.2)
 
     plt.axis('equal')
     plt.xlim(left = -1, right = 10)
     plt.ylim((-1,10))
     plt.show()
 
-K = 3
+def make_polygon(centroid1, centroid2, line):
+    polygons = split(PLANE, line)
+    if polygons[0].contains(centroid1):
+        return polygons[0], polygons[1]
+    else:
+        return polygons[1], polygons[0]
+
+def get_intersect_polygon(polygons):
+    p = polygons[0]
+    for pol in polygons[1:]:
+        p = pol.intersection(p)
+    return p
+
+K = 5
 data, original_label = random_data()
 l, c = kmeans(data, K)
-kmeans_display(data, l, c)
+kmeans_display(data, K, l, c)
 
 
 
